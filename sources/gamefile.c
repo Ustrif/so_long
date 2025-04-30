@@ -6,7 +6,7 @@
 /*   By: raydogmu <raydogmu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/09 09:36:47 by raydogmu          #+#    #+#             */
-/*   Updated: 2025/03/09 09:44:01 by raydogmu         ###   ########.fr       */
+/*   Updated: 2025/04/30 15:28:45 by raydogmu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,10 @@ void	free_struct(t_map1 *st)
 	if (st->img_col != NULL)
 		mlx_destroy_image(st->mlx, st->img_col);
 	if (st->mlx != NULL)
+	{
+		mlx_destroy_display(st->mlx);
 		free(st->mlx);
+	}
 	free(st);
 }
 
@@ -67,14 +70,18 @@ void	close_program(t_map1 *st, int free, char *text)
 	exit(EXIT_SUCCESS);
 }
 
-void	init_mlx_struct(t_map1 *st)
+int	init_mlx_struct(t_map1 *st)
 {
 	int	a;
 
 	a = 32;
 	st->mlx = mlx_init();
+	if (!st->mlx)
+		return (-1);
 	st->mlx_win = mlx_new_window(st->mlx, st->colomn_num * 32,
 			st->row_num * 32, "./so_long");
+	if (!st->mlx)
+		return (-1);
 	st->img_wall = mlx_xpm_file_to_image(st->mlx,
 			"textures/rock.xpm", &a, &a);
 	st->img_col = mlx_xpm_file_to_image(st->mlx,
@@ -85,6 +92,10 @@ void	init_mlx_struct(t_map1 *st)
 			"textures/exit.xpm", &a, &a);
 	st->img_free = mlx_xpm_file_to_image(st->mlx,
 			"textures/grass.xpm", &a, &a);
+	if (!st->img_col || !st->img_player || !st->img_exit
+		|| !st->img_free || !st->img_wall)
+		return (-1);
+	return (0);
 }
 
 t_map1	*get_struct(char *filename)
@@ -108,6 +119,9 @@ t_map1	*get_struct(char *filename)
 	get_start_coordinate(map, &st->player_y, &st->player_x);
 	st->collectible_num = count_total_c(map);
 	get_exit_coordinate(map, &st->exit_y, &st->exit_x);
-	init_mlx_struct(st);
+	if (init_mlx_struct(st) == -1)
+	{
+		close_program(st, 1, "MLX / IMAGE ERROR");
+	}
 	return (st);
 }
